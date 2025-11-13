@@ -1,0 +1,6 @@
+.idea
+.vs
+out/
+target/
+*.class
+out/artifacts/consoleBot_jar/cities
