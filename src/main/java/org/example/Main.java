@@ -18,10 +18,8 @@ public class Main {
         logger.info("Запуск приложения Friendship Test Bot...");
 
         try {
-            // Создаем API для работы с ботами
             TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
 
-            // Создаем и регистрируем нашего бота
             FriendshipTestBot bot = new FriendshipTestBot();
             botsApi.registerBot(bot);
 

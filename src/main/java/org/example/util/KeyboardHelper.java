@@ -8,20 +8,12 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Утилитный класс для создания клавиатур в Telegram.
- * Упрощает создание кнопок и меню.
- */
 public class KeyboardHelper {
 
-    /**
-     * Создает inline-клавиатуру с вариантами ответов
-     */
     public static InlineKeyboardMarkup createOptionsKeyboard(List<String> options) {
         InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
-        // Создаем кнопки для каждого варианта ответа
         for (String option : options) {
             List<InlineKeyboardButton> row = new ArrayList<>();
             InlineKeyboardButton button = new InlineKeyboardButton();
@@ -35,14 +27,10 @@ public class KeyboardHelper {
         return keyboard;
     }
 
-    /**
-     * Создает главное меню бота
-     */
     public static InlineKeyboardMarkup createMainMenuKeyboard() {
         InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
 
-        // Кнопка "Создать тест"
         List<InlineKeyboardButton> row1 = new ArrayList<>();
         InlineKeyboardButton createButton = new InlineKeyboardButton();
         createButton.setText("📝 Создать тест");
@@ -63,9 +51,6 @@ public class KeyboardHelper {
         return keyboard;
     }
 
-    /**
-     * Создает клавиатуру для отмены действия
-     */
     public static InlineKeyboardMarkup createCancelKeyboard() {
         InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rows = new ArrayList<>();
