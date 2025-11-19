@@ -16,7 +16,7 @@ public class TestManager {
 
         questions.add(new Question("Сколько мне лет?", Arrays.asList("1-10", "11-15", "16-20", "21-99")));
         questions.add(new Question("Какую одежду я ношу?", Arrays.asList("Белую", "Темную", "Цветную", "Гоняю без нее")));
-        questions.add(new Question("Важно ли мне мнение?", Arrays.asList("Да", "Нет", "50/50", "Смотря чье")));
+        questions.add(new Question("Важно ли мне мнение окружающих?", Arrays.asList("Да", "Нет", "50/50", "Смотря чье")));
         questions.add(new Question("Сколько языков я знаю?", Arrays.asList("1", "2", "3", "Больше 3")));
         questions.add(new Question("Какой мой любимый цвет?", Arrays.asList("Белый", "Черный", "Зеленый", "Другие")));
         questions.add(new Question("Есть ли у меня братья или сестры?", Arrays.asList("Брат/Братья", "Сестра/Сестры", "Брат и сестра", "Нет")));
@@ -59,7 +59,6 @@ public class TestManager {
 
         userSessions.put(creatorId, session);
 
-        System.out.println("Создан новый тест: " + testId + " для пользователя: " + creatorName);
         return testId;
     }
 
@@ -110,7 +109,6 @@ public class TestManager {
 
     public FriendshipTest getTest(String testId) {
         if (testId == null) {
-            System.out.println("Ошибка: попытка получить тест с null ID");
             return null;
         }
         return tests.get(testId);
@@ -132,7 +130,6 @@ public class TestManager {
 
     public TestResult calculateResults(Long userId, String testId) {
         if (testId == null) {
-            System.out.println("Ошибка: testId is null для пользователя " + userId);
             return null;
         }
 
@@ -140,7 +137,6 @@ public class TestManager {
         FriendshipTest test = tests.get(testId);
 
         if (session == null || test == null) {
-            System.out.println("Ошибка: сессия или тест не найдены. userId: " + userId + ", testId: " + testId);
             return null;
         }
 

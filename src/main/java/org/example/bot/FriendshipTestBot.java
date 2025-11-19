@@ -8,85 +8,38 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 public class FriendshipTestBot extends TelegramLongPollingBot {
 
-    private static final Logger logger = LoggerFactory.getLogger(FriendshipTestBot.class);
     private final TestManager testManager;
 
     public FriendshipTestBot() {
         this.testManager = new TestManager();
-        logger.info("Бот инициализирован");
     }
 
     @Override
-    public void onUpdateReceived(Update update) {
+    public String getBotUsername() {
+        return "Test_On_Friends_bot";
+    }
+
+    @Override
+    public String getBotToken() {
+        return "8009528820:AAFMq2CtDeB3BwMAB4Ve4qN_rlzydVXHtI0";
+    }
+
+    private void executeMessage(SendMessage message) {
         try {
-            if (update.hasMessage() && update.getMessage().hasText()) {
-                handleMessage(update);
-            }
-            else if (update.hasCallbackQuery()) {
-                handleCallbackQuery(update);
-            }
-        } catch (Exception e) {
-            logger.error("Ошибка при обработке обновления", e);
+            execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
         }
     }
 
-    private void handleMessage(Update update) {
-        Long chatId = update.getMessage().getChatId();
-        String messageText = update.getMessage().getText();
-        User user = update.getMessage().getFrom();
-        Long userId = user.getId();
-        String userName = user.getFirstName();
-
-        logger.info("Получено сообщение от {} ({}): {}", userName, userId, messageText);
-
-        if (messageText.startsWith("/start")) {
-            handleStartCommand(chatId, userId, userName, messageText);
-        }
-        else if (messageText.equals("/create")) {
-            startTestCreation(chatId, userId, userName);
-        }
-        else if (messageText.equals("/help")) {
-            sendHelpMessage(chatId);
-        }
-        else {
-            handleTextAnswer(chatId, userId, messageText);
-        }
-    }
-
-    private void handleStartCommand(Long chatId, Long userId, String userName, String messageText) {
-        if (messageText.contains(" ")) {
-            String testId = messageText.split(" ")[1];
-            startTakingTest(chatId, userId, userName, testId);
-        } else {
-            sendWelcomeMessage(chatId, userName);
-        }
-    }
-
-    private void handleCallbackQuery(Update update) {
-        String callbackData = update.getCallbackQuery().getData();
-        Long chatId = update.getCallbackQuery().getMessage().getChatId();
-        Long userId = update.getCallbackQuery().getFrom().getId();
-        String userName = update.getCallbackQuery().getFrom().getFirstName();
-
-        logger.info("Обработка callback от {}: {}", userName, callbackData);
-
-        if (callbackData.equals("create_test")) {
-            startTestCreation(chatId, userId, userName);
-        }
-        else if (callbackData.startsWith("answer_")) {
-            String answer = callbackData.substring(7);
-            handleAnswer(chatId, userId, answer);
-        }
-        else if (callbackData.equals("cancel")) {
-            handleCancel(chatId, userId);
-        }
-        else if (callbackData.equals("help")) {
-            sendHelpMessage(chatId);
-        }
+    private void sendMessage(Long chatId, String text) {
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId.toString());
+        message.setText(text);
+        executeMessage(message);
     }
 
     private void sendWelcomeMessage(Long chatId, String userName) {
@@ -106,19 +59,38 @@ public class FriendshipTestBot extends TelegramLongPollingBot {
         executeMessage(message);
     }
 
-    private void startTestCreation(Long chatId, Long userId, String userName) {
-        String testId = testManager.createNewTest(userId, userName);
+    private void sendHelpMessage(Long chatId) {
+        String text = "❓ Помощь по боту 'Тест на дружбу'\n\n" +
+                "📝 Как создать тест:\n" +
+                "1. Нажми 'Создать тест'\n" +
+                "2. Ответь на 15 вопросов о себе\n" +
+                "3. Получи ссылку для друзей\n\n" +
+                "🎯 Как пройти тест:\n" +
+                "1. Перейди по ссылке от друга\n" +
+                "2. Ответь на вопросы так, как думаешь ответил бы твой друг\n" +
+                "3. Узнай результат\n\n" +
+                "⚡ Команды:\n" +
+                "/start - главное меню\n" +
+                "/create - создать тест\n" +
+                "/help - эта справка";
 
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId.toString());
-        message.setText("🎉 Отлично! Ты начал создание теста на дружбу!\n\n" +
-                "Я буду задавать тебе 15 вопросов о себе. " +
-                "Выбирай те варианты ответов, которые больше всего тебе подходят.\n\n" +
-                "Давай начнем! ✨");
+        sendMessage(chatId, text);
+    }
 
-        executeMessage(message);
+    private void sendResultToCreator(FriendshipTest test, Long userId, TestResult result) {
+        try {
+            String creatorText = "📊 Кто-то прошел ваш тест!\n\n" +
+                    "✅ Правильных ответов: " + result.getScore() + "/" + result.getTotalQuestions() + "\n" +
+                    "📈 Процент правильных: " + String.format("%.1f", result.getPercentage()) + "%";
 
-        sendNextQuestion(chatId, userId);
+            SendMessage message = new SendMessage();
+            message.setChatId(test.getCreatorId().toString());
+            message.setText(creatorText);
+
+            executeMessage(message);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void sendNextQuestion(Long chatId, Long userId) {
@@ -164,20 +136,28 @@ public class FriendshipTestBot extends TelegramLongPollingBot {
         }
     }
 
-    private void completeTestCreation(Long chatId, Long userId) {
-        String testUrl = testManager.completeTestCreation(userId);
+    private void handleStartCommand(Long chatId, Long userId, String userName, String messageText) {
+        if (messageText.contains(" ")) {
+            String testId = messageText.split(" ")[1];
+            startTakingTest(chatId, userId, userName, testId);
+        } else {
+            sendWelcomeMessage(chatId, userName);
+        }
+    }
 
-        String text = "🎉 Поздравляю! Ты создал тест на дружбу!\n\n" +
-                "Теперь отправь эту ссылку друзьям:\n\n" +
-                "🔗 " + testUrl + "\n\n" +
-                "Когда друзья пройдут твой тест, ты увидишь результаты! 📊";
+    private void startTestCreation(Long chatId, Long userId, String userName) {
+        String testId = testManager.createNewTest(userId, userName);
 
         SendMessage message = new SendMessage();
         message.setChatId(chatId.toString());
-        message.setText(text);
-        message.setReplyMarkup(KeyboardHelper.createMainMenuKeyboard());
+        message.setText("🎉 Отлично! Ты начал создание теста на дружбу!\n\n" +
+                "Я буду задавать тебе 15 вопросов о себе. " +
+                "Выбирай те варианты ответов, которые больше всего тебе подходят.\n\n" +
+                "Давай начнем! ✨");
 
         executeMessage(message);
+
+        sendNextQuestion(chatId, userId);
     }
 
     private void startTakingTest(Long chatId, Long userId, String userName, String testId) {
@@ -196,6 +176,22 @@ public class FriendshipTestBot extends TelegramLongPollingBot {
 
         sendMessage(chatId, text);
         sendNextQuestion(chatId, userId);
+    }
+
+    private void completeTestCreation(Long chatId, Long userId) {
+        String testUrl = testManager.completeTestCreation(userId);
+
+        String text = "🎉 Поздравляю! Ты создал тест на дружбу!\n\n" +
+                "Теперь отправь эту ссылку друзьям:\n\n" +
+                "🔗 " + testUrl + "\n\n" +
+                "Когда друзья пройдут твой тест, ты увидишь результаты! 📊";
+
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId.toString());
+        message.setText(text);
+        message.setReplyMarkup(KeyboardHelper.createMainMenuKeyboard());
+
+        executeMessage(message);
     }
 
     private void completeTestTaking(Long chatId, Long userId) {
@@ -243,22 +239,6 @@ public class FriendshipTestBot extends TelegramLongPollingBot {
         sendResultToCreator(test, userId, result);
     }
 
-    private void sendResultToCreator(FriendshipTest test, Long userId, TestResult result) {
-        try {
-            String creatorText = "📊 Кто-то прошел ваш тест!\n\n" +
-                    "✅ Правильных ответов: " + result.getScore() + "/" + result.getTotalQuestions() + "\n" +
-                    "📈 Процент правильных: " + String.format("%.1f", result.getPercentage()) + "%";
-
-            SendMessage message = new SendMessage();
-            message.setChatId(test.getCreatorId().toString());
-            message.setText(creatorText);
-
-            executeMessage(message);
-        } catch (Exception e) {
-            logger.error("Ошибка при отправке результата создателю теста", e);
-        }
-    }
-
     private void handleCancel(Long chatId, Long userId) {
         UserSession session = testManager.getUserSession(userId);
         if (session != null) {
@@ -267,24 +247,6 @@ public class FriendshipTestBot extends TelegramLongPollingBot {
 
         sendMessage(chatId, "❌ Действие отменено.");
         sendWelcomeMessage(chatId, "друг");
-    }
-
-    private void sendHelpMessage(Long chatId) {
-        String text = "❓ Помощь по боту 'Тест на дружбу'\n\n" +
-                "📝 Как создать тест:\n" +
-                "1. Нажми 'Создать тест'\n" +
-                "2. Ответь на 15 вопросов о себе\n" +
-                "3. Получи ссылку для друзей\n\n" +
-                "🎯 Как пройти тест:\n" +
-                "1. Перейди по ссылке от друга\n" +
-                "2. Ответь на вопросы так, как думаешь ответил бы твой друг\n" +
-                "3. Узнай результат\n\n" +
-                "⚡ Команды:\n" +
-                "/start - главное меню\n" +
-                "/create - создать тест\n" +
-                "/help - эта справка";
-
-        sendMessage(chatId, text);
     }
 
     private void handleTextAnswer(Long chatId, Long userId, String answer) {
@@ -296,29 +258,59 @@ public class FriendshipTestBot extends TelegramLongPollingBot {
         }
     }
 
-    private void sendMessage(Long chatId, String text) {
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId.toString());
-        message.setText(text);
-        executeMessage(message);
+    private void handleCallbackQuery(Update update) {
+        String callbackData = update.getCallbackQuery().getData();
+        Long chatId = update.getCallbackQuery().getMessage().getChatId();
+        Long userId = update.getCallbackQuery().getFrom().getId();
+        String userName = update.getCallbackQuery().getFrom().getFirstName();
+
+        if (callbackData.equals("create_test")) {
+            startTestCreation(chatId, userId, userName);
+        }
+        else if (callbackData.startsWith("answer_")) {
+            String answer = callbackData.substring(7);
+            handleAnswer(chatId, userId, answer);
+        }
+        else if (callbackData.equals("cancel")) {
+            handleCancel(chatId, userId);
+        }
+        else if (callbackData.equals("help")) {
+            sendHelpMessage(chatId);
+        }
     }
 
-    private void executeMessage(SendMessage message) {
-        try {
-            execute(message);
-            logger.info("Сообщение отправлено в чат {}", message.getChatId());
-        } catch (TelegramApiException e) {
-            logger.error("Ошибка при отправке сообщения", e);
+    private void handleMessage(Update update) {
+        Long chatId = update.getMessage().getChatId();
+        String messageText = update.getMessage().getText();
+        User user = update.getMessage().getFrom();
+        Long userId = user.getId();
+        String userName = user.getFirstName();
+
+        if (messageText.startsWith("/start")) {
+            handleStartCommand(chatId, userId, userName, messageText);
+        }
+        else if (messageText.equals("/create")) {
+            startTestCreation(chatId, userId, userName);
+        }
+        else if (messageText.equals("/help")) {
+            sendHelpMessage(chatId);
+        }
+        else {
+            handleTextAnswer(chatId, userId, messageText);
         }
     }
 
     @Override
-    public String getBotUsername() {
-        return "Test_On_Friends_bot";
-    }
-
-    @Override
-    public String getBotToken() {
-        return "8009528820:AAFMq2CtDeB3BwMAB4Ve4qN_rlzydVXHtI0";
+    public void onUpdateReceived(Update update) {
+        try {
+            if (update.hasMessage() && update.getMessage().hasText()) {
+                handleMessage(update);
+            }
+            else if (update.hasCallbackQuery()) {
+                handleCallbackQuery(update);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
