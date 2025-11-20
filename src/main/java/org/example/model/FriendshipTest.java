@@ -5,14 +5,17 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class FriendshipTest {
-    private String testId;
-    private Long creatorId;
-    private String CreatorName;
+    private final String testId;
+    private final Long creatorId;
+    private String creatorName;
     private List<Question> questions;
     private Map<Long, TestResult> results;
     private long createAt;
 
-    public FriendshipTest() {
+    public FriendshipTest(String testId, Long creatorId, String creatorName) {
+        this.testId = testId;
+        this.creatorId = creatorId;
+        this.creatorName = creatorName;
         this.results = new ConcurrentHashMap<>();
         this.createAt = System.currentTimeMillis();
     }
@@ -20,22 +23,16 @@ public class FriendshipTest {
     public String getTestId() {
         return testId;
     }
-    public void setTestId(String testId) {
-        this.testId = testId;
-    }
 
     public Long getCreatorId() {
         return creatorId;
     }
-    public void setCreatorId(Long creatorId) {
-        this.creatorId = creatorId;
-    }
 
     public String getCreatorName() {
-        return CreatorName;
+        return creatorName;
     }
-    public void setCreatorName(String CreatorName) {
-        this.CreatorName = CreatorName;
+    public void setCreatorName(String creatorName) {
+        this.creatorName = creatorName;
     }
 
     public List<Question> getQuestions(){

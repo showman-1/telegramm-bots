@@ -4,23 +4,30 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class UserSession{
-    private Long userId;
+    private final Long userId;
     private String currentTestId;
     private int currentQuestionIndex;
     private Map<Integer, String> userAnswers;
     private boolean creatingTest;
     private boolean takingTest;
 
-    public UserSession() {
+    public UserSession(Long userId) {
+        this.userId = userId;
+        this.userAnswers = new HashMap<>();
+        this.currentQuestionIndex = 0;
+    }
+
+    public UserSession(Long userId, String currentTestId, boolean creatingTest, boolean takingTest) {
+        this.userId = userId;
+        this.currentTestId = currentTestId;
+        this.creatingTest = creatingTest;
+        this.takingTest = takingTest;
         this.userAnswers = new HashMap<>();
         this.currentQuestionIndex = 0;
     }
 
     public Long getUserId() {
         return userId;
-    }
-    public void setUserId(Long userId) {
-        this.userId = userId;
     }
 
     public String getCurrentTestId() {

@@ -36,10 +36,7 @@ public class TestManager {
     public String createNewTest(Long creatorId, String creatorName) {
         String testId = UUID.randomUUID().toString().substring(0, 8);
 
-        FriendshipTest test = new FriendshipTest();
-        test.setTestId(testId);
-        test.setCreatorId(creatorId);
-        test.setCreatorName(creatorName);
+        FriendshipTest test = new FriendshipTest(testId, creatorId, creatorName);
 
         List<Question> testQuestions = new ArrayList<>();
         for (Question defaultQuestion : DEFAULT_QUESTIONS) {
@@ -51,11 +48,7 @@ public class TestManager {
 
         tests.put(testId, test);
 
-        UserSession session = new UserSession();
-        session.setUserId(creatorId);
-        session.setCurrentTestId(testId);
-        session.setCreatingTest(true);
-        session.setTakingTest(false);
+        UserSession session = new UserSession(creatorId, testId, true, false);
 
         userSessions.put(creatorId, session);
 
@@ -119,12 +112,7 @@ public class TestManager {
     }
 
     public void startTakingTest(Long userId, String testId) {
-        UserSession session = new UserSession();
-        session.setUserId(userId);
-        session.setCurrentTestId(testId);
-        session.setCreatingTest(false);
-        session.setTakingTest(true);
-
+        UserSession session = new UserSession(userId, testId, false, true);
         userSessions.put(userId, session);
     }
 

@@ -36,9 +36,7 @@ public class FriendshipTestBot extends TelegramLongPollingBot {
     }
 
     private void sendMessage(Long chatId, String text) {
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId.toString());
-        message.setText(text);
+        SendMessage message = new SendMessage(chatId.toString(), text);
         executeMessage(message);
     }
 
@@ -51,9 +49,7 @@ public class FriendshipTestBot extends TelegramLongPollingBot {
                 "• 🎯 Узнать, насколько хорошо друзья тебя знают\n\n" +
                 "Выбери действие:";
 
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId.toString());
-        message.setText(text);
+        SendMessage message = new SendMessage(chatId.toString(), text);
         message.setReplyMarkup(KeyboardHelper.createMainMenuKeyboard());
 
         executeMessage(message);
@@ -83,10 +79,7 @@ public class FriendshipTestBot extends TelegramLongPollingBot {
                     "✅ Правильных ответов: " + result.getScore() + "/" + result.getTotalQuestions() + "\n" +
                     "📈 Процент правильных: " + String.format("%.1f", result.getPercentage()) + "%";
 
-            SendMessage message = new SendMessage();
-            message.setChatId(test.getCreatorId().toString());
-            message.setText(creatorText);
-
+            SendMessage message = new SendMessage(test.getCreatorId().toString(), creatorText);
             executeMessage(message);
         } catch (Exception e) {
             e.printStackTrace();
@@ -113,9 +106,7 @@ public class FriendshipTestBot extends TelegramLongPollingBot {
         String text = "❓ Вопрос " + questionNumber + "/" + totalQuestions + ":\n" +
                 question.getText();
 
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId.toString());
-        message.setText(text);
+        SendMessage message = new SendMessage(chatId.toString(), text);
         message.setReplyMarkup(KeyboardHelper.createOptionsKeyboard(question.getOptions()));
 
         executeMessage(message);
@@ -148,12 +139,11 @@ public class FriendshipTestBot extends TelegramLongPollingBot {
     private void startTestCreation(Long chatId, Long userId, String userName) {
         String testId = testManager.createNewTest(userId, userName);
 
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId.toString());
-        message.setText("🎉 Отлично! Ты начал создание теста на дружбу!\n\n" +
-                "Я буду задавать тебе 15 вопросов о себе. " +
-                "Выбирай те варианты ответов, которые больше всего тебе подходят.\n\n" +
-                "Давай начнем! ✨");
+        SendMessage message = new SendMessage(chatId.toString(),
+                "🎉 Отлично! Ты начал создание теста на дружбу!\n\n" +
+                        "Я буду задавать тебе 15 вопросов о себе. " +
+                        "Выбирай те варианты ответов, которые больше всего тебе подходят.\n\n" +
+                        "Давай начнем! ✨");
 
         executeMessage(message);
 
@@ -186,9 +176,7 @@ public class FriendshipTestBot extends TelegramLongPollingBot {
                 "🔗 " + testUrl + "\n\n" +
                 "Когда друзья пройдут твой тест, ты увидишь результаты! 📊";
 
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId.toString());
-        message.setText(text);
+        SendMessage message = new SendMessage(chatId.toString(), text);
         message.setReplyMarkup(KeyboardHelper.createMainMenuKeyboard());
 
         executeMessage(message);
@@ -229,9 +217,7 @@ public class FriendshipTestBot extends TelegramLongPollingBot {
             text += "😅 Похоже, нужно больше общаться! 💬";
         }
 
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId.toString());
-        message.setText(text);
+        SendMessage message = new SendMessage(chatId.toString(), text);
         message.setReplyMarkup(KeyboardHelper.createMainMenuKeyboard());
 
         executeMessage(message);
@@ -264,18 +250,22 @@ public class FriendshipTestBot extends TelegramLongPollingBot {
         Long userId = update.getCallbackQuery().getFrom().getId();
         String userName = update.getCallbackQuery().getFrom().getFirstName();
 
-        if (callbackData.equals("create_test")) {
-            startTestCreation(chatId, userId, userName);
-        }
-        else if (callbackData.startsWith("answer_")) {
-            String answer = callbackData.substring(7);
-            handleAnswer(chatId, userId, answer);
-        }
-        else if (callbackData.equals("cancel")) {
-            handleCancel(chatId, userId);
-        }
-        else if (callbackData.equals("help")) {
-            sendHelpMessage(chatId);
+        switch (callbackData) {
+            case "create_test":
+                startTestCreation(chatId, userId, userName);
+                break;
+            case "cancel":
+                handleCancel(chatId, userId);
+                break;
+            case "help":
+                sendHelpMessage(chatId);
+                break;
+            default:
+                if (callbackData.startsWith("answer_")) {
+                    String answer = callbackData.substring(7);
+                    handleAnswer(chatId, userId, answer);
+                }
+                break;
         }
     }
 
