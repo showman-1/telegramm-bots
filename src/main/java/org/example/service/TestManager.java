@@ -1,55 +1,26 @@
 package org.example.service;
 
 import org.example.model.*;
+import org.example.util.UrlGenerator;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class TestManager {
+    private final Map<String, FriendshipTest> tests = new ConcurrentHashMap<>();
+    private final Map<Long, UserSession> userSessions = new ConcurrentHashMap<>();
+    private final ResultNotifier resultNotifier;
 
-    private Map<String, FriendshipTest> tests = new ConcurrentHashMap<>();
-    private Map<Long, UserSession> userSessions = new ConcurrentHashMap<>();
-
-    private static final List<Question> DEFAULT_QUESTIONS = createDefaultQuestions();
-
-    private static List<Question> createDefaultQuestions() {
-        List<Question> questions = new ArrayList<>();
-
-        questions.add(new Question("Сколько мне лет?", Arrays.asList("1-10", "11-15", "16-20", "21-99")));
-        questions.add(new Question("Какую одежду я ношу?", Arrays.asList("Белую", "Темную", "Цветную", "Гоняю без нее")));
-        questions.add(new Question("Важно ли мне мнение окружающих?", Arrays.asList("Да", "Нет", "50/50", "Смотря чье")));
-        questions.add(new Question("Сколько языков я знаю?", Arrays.asList("1", "2", "3", "Больше 3")));
-        questions.add(new Question("Какой мой любимый цвет?", Arrays.asList("Белый", "Черный", "Зеленый", "Другие")));
-        questions.add(new Question("Есть ли у меня братья или сестры?", Arrays.asList("Брат/Братья", "Сестра/Сестры", "Брат и сестра", "Нет")));
-        questions.add(new Question("Какое мое любимое время дня?", Arrays.asList("Утро", "День", "Вечер", "Ночь")));
-        questions.add(new Question("Часто ли я матерюсь?", Arrays.asList("Да", "Нет", "50/50", "Зависит от ситуации")));
-        questions.add(new Question("Чего из перечисленного я никогда не боялся?", Arrays.asList("Насекомых", "Высоты", "Темноты", "Другое")));
-        questions.add(new Question("Какие волосы мне нравятся?", Arrays.asList("Кудрявые", "Прямые", "Без разницы", "Без волос")));
-        questions.add(new Question("Без чего я бы не смог прожить?", Arrays.asList("Телефона", "Сладостей", "Денег", "Ничего из перечисленного")));
-        questions.add(new Question("С кем я предпочитаю гулять?", Arrays.asList("Друзья", "Семья", "Партнер", "Один")));
-        questions.add(new Question("Какое мое любимое время года?", Arrays.asList("Лето", "Зима", "Весна", "Осень")));
-        questions.add(new Question("Если заиграет песня, что я буду делать?", Arrays.asList("Танцевать", "Петь", "Ничего", "Смотря на ситуцию")));
-        questions.add(new Question("Какой отдых я предпочитаю?", Arrays.asList("Горы", "Море", "Сидеть дома", "Другое")));
-
-        return questions;
+    public TestManager() {
+        this.resultNotifier = new ResultNotifier();
     }
 
     public String createNewTest(Long creatorId, String creatorName) {
-        String testId = UUID.randomUUID().toString().substring(0, 8);
-
+        String testId = UrlGenerator.generateTestId();
         FriendshipTest test = new FriendshipTest(testId, creatorId, creatorName);
-
-        List<Question> testQuestions = new ArrayList<>();
-        for (Question defaultQuestion : DEFAULT_QUESTIONS) {
-            Question questionCopy = new Question(defaultQuestion.getText(),
-                    new ArrayList<>(defaultQuestion.getOptions()));
-            testQuestions.add(questionCopy);
-        }
-        test.setQuestions(testQuestions);
-
+        test.setQuestions(QuestionProvider.getDefaultQuestions());
         tests.put(testId, test);
 
         UserSession session = new UserSession(creatorId, testId, true, false);
-
         userSessions.put(creatorId, session);
 
         return testId;
@@ -57,11 +28,10 @@ public class TestManager {
 
     public Question getNextQuestion(Long userId) {
         UserSession session = userSessions.get(userId);
-        if (session == null || session.getCurrentQuestionIndex() >= DEFAULT_QUESTIONS.size()) {
+        if (session == null || session.getCurrentQuestionIndex() >= QuestionProvider.getTotalQuestions()) {
             return null;
         }
-
-        return DEFAULT_QUESTIONS.get(session.getCurrentQuestionIndex());
+        return QuestionProvider.getDefaultQuestions().get(session.getCurrentQuestionIndex());
     }
 
     public void saveAnswer(Long userId, String answer) {
@@ -75,35 +45,27 @@ public class TestManager {
                     test.getQuestions().get(session.getCurrentQuestionIndex()).setCorrectAnswer(answer);
                 }
             }
-
             session.setCurrentQuestionIndex(session.getCurrentQuestionIndex() + 1);
         }
     }
 
     public boolean hasCompletedAllQuestions(Long userId) {
         UserSession session = userSessions.get(userId);
-        return session != null && session.getCurrentQuestionIndex() >= DEFAULT_QUESTIONS.size();
+        return session != null && session.getCurrentQuestionIndex() >= QuestionProvider.getTotalQuestions();
     }
 
     public String completeTestCreation(Long userId) {
         UserSession session = userSessions.get(userId);
         if (session != null) {
             session.setCreatingTest(false);
-            String testUrl = generateTestUrl(session.getCurrentTestId());
-            session.reset();
+            String testUrl = UrlGenerator.generateTestUrl(session.getCurrentTestId());
+            userSessions.remove(userId);
             return testUrl;
         }
         return null;
     }
 
-    public String generateTestUrl(String testId) {
-        return "https://t.me/Test_On_Friends_bot?start=" + testId;
-    }
-
     public FriendshipTest getTest(String testId) {
-        if (testId == null) {
-            return null;
-        }
         return tests.get(testId);
     }
 
@@ -128,6 +90,17 @@ public class TestManager {
             return null;
         }
 
+        int score = calculateScore(session, test);
+        TestResult result = createTestResult(test, session, score);
+
+        test.getResults().put(userId, result);
+        resultNotifier.notifyCreator(test, userId, result);
+        userSessions.remove(userId);
+
+        return result;
+    }
+
+    private int calculateScore(UserSession session, FriendshipTest test) {
         int score = 0;
         Map<Integer, String> userAnswers = session.getUserAnswers();
 
@@ -139,25 +112,14 @@ public class TestManager {
                 score++;
             }
         }
-
-        TestResult result = new TestResult(test.getQuestions().size());
-        result.setScore(score);
-        result.setUserAnswers(new HashMap<>(userAnswers));
-
-        test.getResults().put(userId, result);
-
-        sendResultToCreator(test, userId, result);
-
-        session.reset();
-
-        return result;
+        return score;
     }
 
-    private void sendResultToCreator(FriendshipTest test, Long userId, TestResult result) {
-        System.out.println("Результат для создателя " + test.getCreatorName() +
-                ": пользователь " + userId + " набрал " + result.getScore() +
-                "/" + result.getTotalQuestions() + " (" +
-                String.format("%.1f", result.getPercentage()) + "%)");
+    private TestResult createTestResult(FriendshipTest test, UserSession session, int score) {
+        TestResult result = new TestResult(test.getQuestions().size());
+        result.setScore(score);
+        result.setUserAnswers(new HashMap<>(session.getUserAnswers()));
+        return result;
     }
 
     public void removeUserSession(Long userId) {
