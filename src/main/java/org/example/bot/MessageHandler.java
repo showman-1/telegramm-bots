@@ -120,13 +120,11 @@ public class MessageHandler {
         UserSession session = testManager.getUserSession(userId);
 
         if (session != null && (session.isCreatingTest() || session.isTakingTest())) {
-
             return null;
         }
 
         return responseGenerator.createDefaultResponse(chatId);
     }
-
 
     private BotResponse getNextQuestionResponse(Long chatId, Long userId) {
         return responseGenerator.createQuestionResponse(chatId, userId, testManager);

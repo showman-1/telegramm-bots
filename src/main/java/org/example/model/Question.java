@@ -3,18 +3,18 @@ package org.example.model;
 import java.util.List;
 
 public class Question {
-
     private String text;
     private String correctAnswer;
     private List<String> options;
+    private String imagePath;
 
     public Question() {
-
     }
 
-    public Question(String text, List<String> options) {
+    public Question(String text, List<String> options, String imagePath) {
         this.text = text;
         this.options = options;
+        this.imagePath = imagePath;
     }
 
     public String getText() {
@@ -36,5 +36,12 @@ public class Question {
     }
     public void setOptions(List<String> options) {
         this.options = options;
+    }
+
+    public String getImagePath() {
+        return imagePath;
+    }
+    public void setImagePath(String imagePath) {
+        this.imagePath = imagePath;
     }
 }

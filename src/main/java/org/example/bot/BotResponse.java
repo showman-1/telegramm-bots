@@ -1,17 +1,26 @@
 package org.example.bot;
 
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class BotResponse {
-    private final List<SendMessage> messages;
+    private final List<PartialBotApiMethod> messages;
 
     public BotResponse(SendMessage message) {
         this.messages = new ArrayList<>();
         if (message != null) {
             this.messages.add(message);
+        }
+    }
+
+    public BotResponse(SendPhoto photoMessage) {
+        this.messages = new ArrayList<>();
+        if (photoMessage != null) {
+            this.messages.add(photoMessage);
         }
     }
 
@@ -24,7 +33,7 @@ public class BotResponse {
         }
     }
 
-    public List<SendMessage> getMessages() {
+    public List<PartialBotApiMethod> getMessages() {
         return messages;
     }
 

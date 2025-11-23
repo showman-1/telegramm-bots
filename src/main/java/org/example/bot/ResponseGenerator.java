@@ -1,11 +1,15 @@
 package org.example.bot;
 
 import org.example.model.FriendshipTest;
+import org.example.model.Question;
 import org.example.model.TestResult;
 import org.example.service.TestManager;
 import org.example.util.KeyboardHelper;
-import org.example.util.UrlGenerator;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
+
+import java.io.File;
 
 public class ResponseGenerator {
 
@@ -68,11 +72,18 @@ public class ResponseGenerator {
         int questionNumber = session.getCurrentQuestionIndex() + 1;
         int totalQuestions = 15;
 
-        String text = "❓ Вопрос " + questionNumber + "/" + totalQuestions + ":\n" + question.getText();
-        SendMessage message = new SendMessage(chatId.toString(), text);
-        message.setReplyMarkup(KeyboardHelper.createOptionsKeyboard(question.getOptions()));
+        String caption = "❓ Вопрос " + questionNumber + "/" + totalQuestions + ":\n" + question.getText();
 
-        return new BotResponse(message);
+        SendPhoto photoMessage = new SendPhoto();
+        photoMessage.setChatId(chatId.toString());
+
+        File imageFile = new File(question.getImagePath());
+        InputFile photo = new InputFile(imageFile);
+        photoMessage.setPhoto(photo);
+        photoMessage.setCaption(caption);
+        photoMessage.setReplyMarkup(KeyboardHelper.createOptionsKeyboard(question.getOptions()));
+
+        return new BotResponse(photoMessage);
     }
 
     public BotResponse createTestCreationCompleteResponse(Long chatId, String testUrl) {
@@ -85,7 +96,6 @@ public class ResponseGenerator {
         message.setReplyMarkup(KeyboardHelper.createMainMenuKeyboard());
         return new BotResponse(message);
     }
-
 
     public BotResponse createTestResultResponse(Long chatId, TestResult result, String creatorName) {
         String text = "📊 Результаты теста от " + creatorName + ":\n\n" +
