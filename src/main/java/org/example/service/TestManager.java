@@ -4,6 +4,8 @@ import org.example.model.*;
 import org.example.util.UrlGenerator;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+import java.util.Map.Entry;
 
 public class TestManager {
     private final Map<String, FriendshipTest> tests = new ConcurrentHashMap<>();
@@ -124,5 +126,23 @@ public class TestManager {
 
     public void removeUserSession(Long userId) {
         userSessions.remove(userId);
+    }
+
+    public List<Entry<Long, TestResult>> getFriendsRanking(String testId) {
+        FriendshipTest test = tests.get(testId);
+        if (test == null || test.getResults().isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // Сортируем результаты по убыванию процента правильных ответов
+        return test.getResults().entrySet().stream()
+                .sorted((e1, e2) -> Double.compare(e2.getValue().getPercentage(), e1.getValue().getPercentage()))
+                .collect(Collectors.toList());
+    }
+
+    public List<FriendshipTest> getTestsByCreator(Long creatorId) {
+        return tests.values().stream()
+                .filter(test -> test.getCreatorId().equals(creatorId))
+                .collect(Collectors.toList());
     }
 }

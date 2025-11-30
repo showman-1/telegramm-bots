@@ -10,6 +10,8 @@ import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 
 import java.io.File;
+import java.util.Map;
+import java.util.List;
 
 public class ResponseGenerator {
 
@@ -19,7 +21,8 @@ public class ResponseGenerator {
                 "Здесь ты можешь:\n" +
                 "• 📝 Создать свой тест с 15 вопросами о себе\n" +
                 "• 🔗 Получить ссылку для друзей\n" +
-                "• 🎯 Узнать, насколько хорошо друзья тебя знают\n\n" +
+                "• 🎯 Узнать, насколько хорошо друзья тебя знают\n" +
+                "• 🏆 Смотреть рейтинг друзей\n\n" +
                 "Выбери действие:";
 
         SendMessage message = new SendMessage(chatId.toString(), text);
@@ -37,6 +40,10 @@ public class ResponseGenerator {
                 "1. Перейди по ссылке от друга\n" +
                 "2. Ответь на вопросы так, как думаешь ответил бы твой друг\n" +
                 "3. Узнай результат\n\n" +
+                "🏆 Рейтинг друзей:\n" +
+                "• Смотри, кто из друзей лучше тебя знает\n" +
+                "• Топ 10 результатов с процентами\n" +
+                "• Автоматическое обновление\n\n" +
                 "⚡ Команды:\n" +
                 "/start - главное меню\n" +
                 "/create - создать тест\n" +
@@ -90,7 +97,7 @@ public class ResponseGenerator {
         String text = "🎉 Поздравляю! Ты создал тест на дружбу!\n\n" +
                 "Теперь отправь эту ссылку друзьям:\n\n" +
                 "🔗 " + testUrl + "\n\n" +
-                "Когда друзья пройдут твой тест, ты увидишь результаты! 📊";
+                "Когда друзья пройдут твой тест, ты увидишь результаты в разделе '🏆 Рейтинг друзей'! 📊";
 
         SendMessage message = new SendMessage(chatId.toString(), text);
         message.setReplyMarkup(KeyboardHelper.createMainMenuKeyboard());
@@ -118,9 +125,11 @@ public class ResponseGenerator {
     }
 
     public BotResponse createCreatorNotificationResponse(FriendshipTest test, Long userId, TestResult result) {
-        String creatorText = "📊 Кто-то прошел ваш тест!\n\n" +
+        String friendName = test.getFriendName(userId);
+        String creatorText = "📊 " + friendName + " прошел ваш тест!\n\n" +
                 "✅ Правильных ответов: " + result.getScore() + "/" + result.getTotalQuestions() + "\n" +
-                "📈 Процент правильных: " + String.format("%.1f", result.getPercentage()) + "%";
+                "📈 Процент правильных: " + String.format("%.1f", result.getPercentage()) + "%\n\n" +
+                "Посмотреть полный рейтинг друзей можно в главном меню! 🏆";
 
         return new BotResponse(new SendMessage(test.getCreatorId().toString(), creatorText));
     }
@@ -141,5 +150,61 @@ public class ResponseGenerator {
 
     public BotResponse createDefaultResponse(Long chatId) {
         return new BotResponse(new SendMessage(chatId.toString(), "Используй кнопки для навигации или /start для главного меню"));
+    }
+
+    public BotResponse createFriendsRankingResponse(Long chatId, FriendshipTest test, List<Map.Entry<Long, TestResult>> ranking) {
+        if (ranking.isEmpty()) {
+            return createNoFriendsResultsResponse(chatId);
+        }
+
+        StringBuilder text = new StringBuilder();
+        text.append("🏆 Рейтинг друзей для теста '").append(test.getCreatorName()).append("'\n\n");
+
+        int position = 1;
+        for (Map.Entry<Long, TestResult> entry : ranking) {
+            TestResult result = entry.getValue();
+            String friendName = test.getFriendName(entry.getKey());
+
+            text.append(getPositionEmoji(position))
+                    .append(" ").append(friendName).append("\n")
+                    .append("   ⭐ ").append(result.getScore()).append("/").append(result.getTotalQuestions())
+                    .append(" (").append(String.format("%.1f", result.getPercentage())).append("%)\n\n");
+
+            position++;
+            if (position > 10) break; // Ограничим топ 10
+        }
+
+        text.append("Всего прошло тест: ").append(ranking.size()).append(" друзей");
+
+        SendMessage message = new SendMessage(chatId.toString(), text.toString());
+        message.setReplyMarkup(KeyboardHelper.createMainMenuKeyboard());
+        return new BotResponse(message);
+    }
+
+    public BotResponse createNoFriendsResultsResponse(Long chatId) {
+        String text = "📊 Пока никто не прошел ваш тест!\n\n" +
+                "Отправьте ссылку на тест друзьям, чтобы увидеть их результаты здесь.";
+
+        SendMessage message = new SendMessage(chatId.toString(), text);
+        message.setReplyMarkup(KeyboardHelper.createMainMenuKeyboard());
+        return new BotResponse(message);
+    }
+
+    public BotResponse createNoTestsResponse(Long chatId) {
+        String text = "📝 У вас еще нет созданных тестов!\n\n" +
+                "Создайте тест, чтобы увидеть рейтинг друзей.";
+
+        SendMessage message = new SendMessage(chatId.toString(), text);
+        message.setReplyMarkup(KeyboardHelper.createMainMenuKeyboard());
+        return new BotResponse(message);
+    }
+
+    private String getPositionEmoji(int position) {
+        switch (position) {
+            case 1: return "🥇";
+            case 2: return "🥈";
+            case 3: return "🥉";
+            default: return "🔸";
+        }
     }
 }

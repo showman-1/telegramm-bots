@@ -34,13 +34,20 @@ public class KeyboardHelper {
         row1.add(createButton);
 
         List<InlineKeyboardButton> row2 = new ArrayList<>();
+        InlineKeyboardButton rankingButton = new InlineKeyboardButton();
+        rankingButton.setText("🏆 Рейтинг друзей");
+        rankingButton.setCallbackData("friends_ranking");
+        row2.add(rankingButton);
+
+        List<InlineKeyboardButton> row3 = new ArrayList<>();
         InlineKeyboardButton helpButton = new InlineKeyboardButton();
         helpButton.setText("Помощь");
         helpButton.setCallbackData("help");
-        row2.add(helpButton);
+        row3.add(helpButton);
 
         rows.add(row1);
         rows.add(row2);
+        rows.add(row3);
         keyboard.setKeyboard(rows);
 
         return keyboard;

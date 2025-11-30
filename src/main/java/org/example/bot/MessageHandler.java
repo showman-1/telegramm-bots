@@ -6,6 +6,8 @@ import org.example.model.TestResult;
 import org.example.service.TestManager;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
+import java.util.Map;
+import java.util.List;
 
 public class MessageHandler {
     private final TestManager testManager;
@@ -53,6 +55,8 @@ public class MessageHandler {
         switch (callbackData) {
             case "create_test":
                 return handleCreateCommand(chatId, userId, userName);
+            case "friends_ranking":
+                return handleFriendsRankingCommand(chatId, userId);
             case "cancel":
                 return handleCancelCommand(chatId, userId);
             case "help":
@@ -93,11 +97,29 @@ public class MessageHandler {
         return responseGenerator.createCancelResponse(chatId);
     }
 
+    private BotResponse handleFriendsRankingCommand(Long chatId, Long userId) {
+        // Получаем все тесты пользователя
+        List<FriendshipTest> userTests = testManager.getTestsByCreator(userId);
+
+        if (userTests.isEmpty()) {
+            return responseGenerator.createNoTestsResponse(chatId);
+        }
+
+        // Для простоты берем первый тест (можно расширить для выбора конкретного теста)
+        FriendshipTest test = userTests.get(0);
+        List<Map.Entry<Long, TestResult>> ranking = testManager.getFriendsRanking(test.getTestId());
+
+        return responseGenerator.createFriendsRankingResponse(chatId, test, ranking);
+    }
+
     private BotResponse handleStartTakingTest(Long chatId, Long userId, String userName, String testId) {
         FriendshipTest test = testManager.getTest(testId);
         if (test == null) {
             return responseGenerator.createTestNotFoundResponse(chatId);
         }
+
+        // Сохраняем имя друга
+        test.addFriendName(userId, userName);
 
         testManager.startTakingTest(userId, testId);
         BotResponse startResponse = responseGenerator.createTestTakingStartResponse(chatId, test.getCreatorName());
