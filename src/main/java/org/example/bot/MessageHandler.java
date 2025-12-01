@@ -98,14 +98,14 @@ public class MessageHandler {
     }
 
     private BotResponse handleFriendsRankingCommand(Long chatId, Long userId) {
-        // Получаем все тесты пользователя
+
         List<FriendshipTest> userTests = testManager.getTestsByCreator(userId);
 
         if (userTests.isEmpty()) {
             return responseGenerator.createNoTestsResponse(chatId);
         }
 
-        // Для простоты берем первый тест (можно расширить для выбора конкретного теста)
+
         FriendshipTest test = userTests.get(0);
         List<Map.Entry<Long, TestResult>> ranking = testManager.getFriendsRanking(test.getTestId());
 
@@ -118,7 +118,6 @@ public class MessageHandler {
             return responseGenerator.createTestNotFoundResponse(chatId);
         }
 
-        // Сохраняем имя друга
         test.addFriendName(userId, userName);
 
         testManager.startTakingTest(userId, testId);
