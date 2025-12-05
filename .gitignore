@@ -4,3 +4,6 @@ out/
 target/
 *.class
 out/artifacts/consoleBot_jar/cities
+.env
+.env.local
+.env.*.local

@@ -1,7 +1,6 @@
 package org.example.bot;
 
 import org.example.model.FriendshipTest;
-import org.example.model.Question;
 import org.example.model.TestResult;
 import org.example.service.TestManager;
 import org.example.util.KeyboardHelper;
@@ -16,65 +15,61 @@ import java.util.List;
 public class ResponseGenerator {
 
     public BotResponse createWelcomeResponse(Long chatId, String userName) {
-        String text = String.format(
-                "👋 Привет, %s!%n%n" +
-                        "Добро пожаловать в бот 'Тест на дружбу'! 🎯%n%n" +
-                        "Здесь ты можешь:%n" +
-                        "• 📝 Создать свой тест с 15 вопросами о себе%n" +
-                        "• 🔗 Получить ссылку для друзей%n" +
-                        "• 🎯 Узнать, насколько хорошо друзья тебя знают%n" +
-                        "• 🏆 Смотреть рейтинг друзей%n%n" +
-                        "Выбери действие:",
-                userName
-        );
+        StringBuilder text = new StringBuilder();
+        text.append(String.format("👋 Привет, %s!%n%n", userName));
+        text.append("Добро пожаловать в бот 'Тест на дружбу'! 🎯%n%n");
+        text.append("Здесь ты можешь:%n");
+        text.append("• 📝 Создать свой тест с 15 вопросами о себе%n");
+        text.append("• 🔗 Получить ссылку для друзей%n");
+        text.append("• 🎯 Узнать, насколько хорошо друзья тебя знают%n");
+        text.append("• 🏆 Смотреть рейтинг друзей%n%n");
+        text.append("Выбери действие:");
 
-        SendMessage message = new SendMessage(chatId.toString(), text);
+        SendMessage message = new SendMessage(chatId.toString(), String.format(text.toString()));
         message.setReplyMarkup(KeyboardHelper.createMainMenuKeyboard());
         return new BotResponse(message);
     }
 
     public BotResponse createHelpResponse(Long chatId) {
-        String text = String.format(
-                "❓ Помощь по боту 'Тест на дружбу'%n%n" +
-                        "📝 Как создать тест:%n" +
-                        "1. Нажми 'Создать тест'%n" +
-                        "2. Ответь на 15 вопросов о себе%n" +
-                        "3. Получи ссылку для друзей%n%n" +
-                        "🎯 Как пройти тест:%n" +
-                        "1. Перейди по ссылке от друга%n" +
-                        "2. Ответь на вопросы так, как думаешь ответил бы твой друг%n" +
-                        "3. Узнай результат%n%n" +
-                        "🏆 Рейтинг друзей:%n" +
-                        "• Смотри, кто из друзей лучше тебя знает%n" +
-                        "• Топ 10 результатов с процентами%n" +
-                        "• Автоматическое обновление%n%n" +
-                        "⚡ Команды:%n" +
-                        "/start - главное меню%n" +
-                        "/create - создать тест%n" +
-                        "/help - эта справка");
+        StringBuilder text = new StringBuilder();
+        text.append("❓ Помощь по боту 'Тест на дружбу'%n%n");
+        text.append("📝 Как создать тест:%n");
+        text.append("1. Нажми 'Создать тест'%n");
+        text.append("2. Ответь на 15 вопросов о себе%n");
+        text.append("3. Получи ссылку для друзей%n%n");
+        text.append("🎯 Как пройти тест:%n");
+        text.append("1. Перейди по ссылке от друга%n");
+        text.append("2. Ответь на вопросы так, как думаешь ответил бы твой друг%n");
+        text.append("3. Узнай результат%n%n");
+        text.append("🏆 Рейтинг друзей:%n");
+        text.append("• Смотри, кто из друзей лучше тебя знает%n");
+        text.append("• Топ 10 результатов с процентами%n");
+        text.append("• Автоматическое обновление%n%n");
+        text.append("⚡ Команды:%n");
+        text.append("/start - главное меню%n");
+        text.append("/create - создать тест%n");
+        text.append("/help - эта справка");
 
-        return new BotResponse(new SendMessage(chatId.toString(), String.format(text)));
+        return new BotResponse(new SendMessage(chatId.toString(), String.format(text.toString())));
     }
 
     public BotResponse createTestCreationStartResponse(Long chatId) {
-        String text = String.format(
-                "🎉 Отлично! Ты начал создание теста на дружбу!%n%n" +
-                        "Я буду задавать тебе 15 вопросов о себе. " +
-                        "Выбирай те варианты ответов, которые больше всего тебе подходят.%n%n" +
-                        "Давай начнем! ✨");
+        StringBuilder text = new StringBuilder();
+        text.append("🎉 Отлично! Ты начал создание теста на дружбу!%n%n");
+        text.append("Я буду задавать тебе 15 вопросов о себе. ");
+        text.append("Выбирай те варианты ответов, которые больше всего тебе подходят.%n%n");
+        text.append("Давай начнем! ✨");
 
-        return new BotResponse(new SendMessage(chatId.toString(), String.format(text)));
+        return new BotResponse(new SendMessage(chatId.toString(), String.format(text.toString())));
     }
 
     public BotResponse createTestTakingStartResponse(Long chatId, String creatorName) {
-        String text = String.format(
-                "🎯 Ты начал тест на дружбу от %s!%n%n" +
-                        "Отвечай на вопросы так, как думаешь, что ответил бы твой друг.%n%n" +
-                        "Удачи! 🍀",
-                creatorName
-        );
+        StringBuilder text = new StringBuilder();
+        text.append(String.format("🎯 Ты начал тест на дружбу от %s!%n%n", creatorName));
+        text.append("Отвечай на вопросы так, как думаешь, что ответил бы твой друг.%n%n");
+        text.append("Удачи! 🍀");
 
-        return new BotResponse(new SendMessage(chatId.toString(), String.format(text)));
+        return new BotResponse(new SendMessage(chatId.toString(), String.format(text.toString())));
     }
 
     public BotResponse createQuestionResponse(Long chatId, Long userId, TestManager testManager) {
@@ -102,26 +97,22 @@ public class ResponseGenerator {
     }
 
     public BotResponse createTestCreationCompleteResponse(Long chatId, String testUrl) {
-        String text = String.format(
-                "🎉 Поздравляю! Ты создал тест на дружбу!%n%n" +
-                        "Теперь отправь эту ссылку друзьям:%n%n" +
-                        "🔗 %s%n%n" +
-                        "Когда друзья пройдут твой тест, ты увидишь результаты в разделе '🏆 Рейтинг друзей'! 📊",
-                testUrl
-        );
+        StringBuilder text = new StringBuilder();
+        text.append("🎉 Поздравляю! Ты создал тест на дружбу!%n%n");
+        text.append("Теперь отправь эту ссылку друзьям:%n%n");
+        text.append(String.format("🔗 %s%n%n", testUrl));
+        text.append("Когда друзья пройдут твой тест, ты увидишь результаты в разделе '🏆 Рейтинг друзей'! 📊");
 
-        SendMessage message = new SendMessage(chatId.toString(), text);
+        SendMessage message = new SendMessage(chatId.toString(), text.toString());
         message.setReplyMarkup(KeyboardHelper.createMainMenuKeyboard());
         return new BotResponse(message);
     }
 
     public BotResponse createTestResultResponse(Long chatId, TestResult result, String creatorName) {
-        String text = String.format(
-                "📊 Результаты теста от %s:%n%n" +
-                        "✅ Правильных ответов: %d/%d%n" +
-                        "📈 Процент правильных: %.1f%%%n%n",
-                creatorName, result.getScore(), result.getTotalQuestions(), result.getPercentage()
-        );
+        StringBuilder text = new StringBuilder();
+        text.append(String.format("📊 Результаты теста от %s:%n%n", creatorName));
+        text.append(String.format("✅ Правильных ответов: %d/%d%n", result.getScore(), result.getTotalQuestions()));
+        text.append(String.format("📈 Процент правильных: %.1f%%%n%n", result.getPercentage()));
 
         double percentage = result.getPercentage();
         String additionalText;
@@ -136,22 +127,22 @@ public class ResponseGenerator {
             additionalText = "😅 Похоже, нужно больше общаться! 💬";
         }
 
-        SendMessage message = new SendMessage(chatId.toString(), text + additionalText);
+        text.append(additionalText);
+        SendMessage message = new SendMessage(chatId.toString(), text.toString());
         message.setReplyMarkup(KeyboardHelper.createMainMenuKeyboard());
         return new BotResponse(message);
     }
 
     public BotResponse createCreatorNotificationResponse(FriendshipTest test, Long userId, TestResult result) {
+        StringBuilder creatorText = new StringBuilder();
         String friendName = test.getFriendName(userId);
-        String creatorText = String.format(
-                "📊 %s прошел ваш тест!%n%n" +
-                        "✅ Правильных ответов: %d/%d%n" +
-                        "📈 Процент правильных: %.1f%%%n%n" +
-                        "Посмотреть полный рейтинг друзей можно в главном меню! 🏆",
-                friendName, result.getScore(), result.getTotalQuestions(), result.getPercentage()
-        );
 
-        return new BotResponse(new SendMessage(test.getCreatorId().toString(), creatorText));
+        creatorText.append(String.format("📊 %s прошел ваш тест!%n%n", friendName));
+        creatorText.append(String.format("✅ Правильных ответов: %d/%d%n", result.getScore(), result.getTotalQuestions()));
+        creatorText.append(String.format("📈 Процент правильных: %.1f%%%n%n", result.getPercentage()));
+        creatorText.append("Посмотреть полный рейтинг друзей можно в главном меню! 🏆");
+
+        return new BotResponse(new SendMessage(test.getCreatorId().toString(), creatorText.toString()));
     }
 
     public BotResponse createCancelResponse(Long chatId) {
@@ -205,21 +196,21 @@ public class ResponseGenerator {
     }
 
     public BotResponse createNoFriendsResultsResponse(Long chatId) {
-        String text =
-                "📊 Пока никто не прошел ваш тест!%n%n" +
-                        "Отправьте ссылку на тест друзьям, чтобы увидеть их результаты здесь.";
+        StringBuilder text = new StringBuilder();
+        text.append("📊 Пока никто не прошел ваш тест!%n%n");
+        text.append("Отправьте ссылку на тест друзьям, чтобы увидеть их результаты здесь.");
 
-        SendMessage message = new SendMessage(chatId.toString(), String.format(text));
+        SendMessage message = new SendMessage(chatId.toString(), String.format(text.toString()));
         message.setReplyMarkup(KeyboardHelper.createMainMenuKeyboard());
         return new BotResponse(message);
     }
 
     public BotResponse createNoTestsResponse(Long chatId) {
-        String text =
-                "📝 У вас еще нет созданных тестов!%n%n" +
-                        "Создайте тест, чтобы увидеть рейтинг друзей.";
+        StringBuilder text = new StringBuilder();
+        text.append("📝 У вас еще нет созданных тестов!%n%n");
+        text.append("Создайте тест, чтобы увидеть рейтинг друзей.");
 
-        SendMessage message = new SendMessage(chatId.toString(), String.format(text));
+        SendMessage message = new SendMessage(chatId.toString(), String.format(text.toString()));
         message.setReplyMarkup(KeyboardHelper.createMainMenuKeyboard());
         return new BotResponse(message);
     }
